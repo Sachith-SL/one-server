@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/employee")
+@RequestMapping("/api/one/v1/employee")
 @CrossOrigin(origins = "*")
 public class EmployeeController {
 

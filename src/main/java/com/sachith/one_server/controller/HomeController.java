@@ -6,11 +6,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/home")
+@RequestMapping("/api/one/v1")
 @CrossOrigin(origins = "*")
 public class HomeController {
     @GetMapping
     public String home() {
+        return "Welcome to Practical One Application!";
+    }
+
+    @GetMapping("/health")
+    public String health() {
         return "Welcome to Practical One Application!";
     }
 }
