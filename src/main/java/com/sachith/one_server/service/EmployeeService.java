@@ -1,15 +1,18 @@
 package com.sachith.one_server.service;
 
 import com.sachith.one_server.dto.EmployeeRequest;
+import com.sachith.one_server.dto.EmployeeResponse;
 import com.sachith.one_server.model.Employee;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface EmployeeService {
 
-    public List<Employee> getAllEmployees();
-    public Employee getEmployeeById(Integer id);
-    public Employee createEmployee(EmployeeRequest request);
-    public Employee updateEmployee(Integer id, Employee employee);
+    public Page<EmployeeResponse> getAllEmployees(Pageable pageable);
+    public EmployeeResponse getEmployeeById(Integer id);
+    public EmployeeResponse createEmployee(EmployeeRequest request);
+    public EmployeeResponse updateEmployee(Integer id, EmployeeResponse request);
     public void deleteEmployee(Integer id);
 }

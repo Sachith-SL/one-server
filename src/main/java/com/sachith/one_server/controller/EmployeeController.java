@@ -3,9 +3,12 @@ package com.sachith.one_server.controller;
 
 import com.sachith.one_server.dto.BaseResponse;
 import com.sachith.one_server.dto.EmployeeRequest;
+import com.sachith.one_server.dto.EmployeeResponse;
 import com.sachith.one_server.model.Employee;
 import com.sachith.one_server.service.EmployeeService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,22 +28,22 @@ public class EmployeeController {
 
     // get all employees
     @GetMapping
-    public ResponseEntity<BaseResponse<List<Employee>>> getAllEmployees() {
-        List<Employee> list = service.getAllEmployees();
-        return ResponseEntity.ok(BaseResponse.success("Fetched employees", list));
+    public ResponseEntity<BaseResponse<Page<EmployeeResponse>>> getAllEmployees(Pageable pageable) {
+        Page<EmployeeResponse> employeeResponsePage = service.getAllEmployees(pageable);
+        return ResponseEntity.ok(BaseResponse.success("Fetched employees", employeeResponsePage));
     }
 
     // get employee by id
     @GetMapping("/{id}")
-    public ResponseEntity<BaseResponse<Employee>> getEmployeeById(@PathVariable Integer id) {
-        Employee e = service.getEmployeeById(id);
-        return ResponseEntity.ok(BaseResponse.success(e));
+    public ResponseEntity<BaseResponse<EmployeeResponse>> getEmployeeById(@PathVariable Integer id) {
+        EmployeeResponse response = service.getEmployeeById(id);
+        return ResponseEntity.ok(BaseResponse.success(response));
     }
 
     // create new employee
     @PostMapping
-    public ResponseEntity<BaseResponse<Employee>> createEmployee(@Valid @RequestBody EmployeeRequest request) {
-        Employee created = service.createEmployee(request);
+    public ResponseEntity<BaseResponse<EmployeeResponse>> createEmployee(@Valid @RequestBody EmployeeRequest request) {
+        EmployeeResponse created = service.createEmployee(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(BaseResponse.success("Employee created", created));
@@ -48,8 +51,8 @@ public class EmployeeController {
 
     // update employee
     @PutMapping("/{id}")
-    public ResponseEntity<BaseResponse<Employee>> updateEmployee(@PathVariable Integer id, @Valid @RequestBody Employee employee) {
-        Employee updated = service.updateEmployee(id, employee);
+    public ResponseEntity<BaseResponse<EmployeeResponse>> updateEmployee(@PathVariable Integer id, @Valid @RequestBody EmployeeResponse request) {
+        EmployeeResponse updated = service.updateEmployee(id, request);
         return ResponseEntity.ok(BaseResponse.success("Employee updated", updated));
     }
 
