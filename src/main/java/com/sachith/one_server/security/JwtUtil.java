@@ -4,7 +4,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.KeyGenerator;
@@ -22,28 +24,28 @@ public class JwtUtil {
     private String secretKey ="";
     private final long EXPIRATION_MS = 3600000;
 
-    public JwtUtil(){
-        try {
-            KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey key = keyGenerator.generateKey();
-            secretKey = Base64.getEncoder().encodeToString(key.getEncoded());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+
+
+    public JwtUtil(@Value("${jwt.secret}") String secret) {
+        this.key = Keys.hmacShaKeyFor(
+                Decoders.BASE64.decode(secret)
+        );
     }
 
     public String generateToken(String username) {
+        System.out.println(Encoders.BASE64.encode(key.getEncoded()));
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .signWith(getKey())
+                .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getKey())
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()

@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/one/v1")
-@CrossOrigin(origins = "*")
 public class HomeController {
     @GetMapping
     public String home() {
