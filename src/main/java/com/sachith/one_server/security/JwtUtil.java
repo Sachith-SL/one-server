@@ -7,6 +7,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.KeyGenerator;
@@ -14,17 +15,18 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "very-secret-key";
     private String secretKey ="";
     private final long EXPIRATION_MS = 3600000;
 
-    Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private Key key; // = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
@@ -33,10 +35,17 @@ public class JwtUtil {
         );
     }
 
-    public String generateToken(String username) {
-        System.out.println(Encoders.BASE64.encode(key.getEncoded()));
+    public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
+//        System.out.println(Encoders.BASE64.encode(key.getEncoded()));
+
+        // Convert authorities to a list of strings
+        List<String> roles = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
         return Jwts.builder()
                 .setSubject(username)
+                .claim("roles", roles) // Add roles as a claim
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -52,9 +61,14 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    private SecretKey getKey(){
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
+    public List<String> extractRoles(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("roles", List.class);
     }
 
 }

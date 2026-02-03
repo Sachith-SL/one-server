@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public class EmployeeController {
     }
 
     // create new employee
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<BaseResponse<EmployeeResponse>> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         EmployeeResponse created = service.createEmployee(request);
@@ -49,6 +51,7 @@ public class EmployeeController {
     }
 
     // update employee
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<BaseResponse<EmployeeResponse>> updateEmployee(@PathVariable Integer id, @Valid @RequestBody EmployeeResponse request) {
         EmployeeResponse updated = service.updateEmployee(id, request);
@@ -56,6 +59,7 @@ public class EmployeeController {
     }
 
     // delete employee
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<BaseResponse<Object>> deleteEmployee(@PathVariable Integer id) {
         service.deleteEmployee(id);
