@@ -10,20 +10,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    private String secretKey ="";
     private final long EXPIRATION_MS = 3600000;
 
     private Key key; // = Keys.secretKeyFor(SignatureAlgorithm.HS256);

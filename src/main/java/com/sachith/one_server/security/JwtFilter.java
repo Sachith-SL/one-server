@@ -31,13 +31,12 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-
-
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
             String token = authHeader.substring(7);
+            // Extract roles from the token
             List<String> roles = jwtUtil.extractRoles(token);
 
             List<GrantedAuthority> authorities = roles.stream()
