@@ -1,5 +1,7 @@
 package com.sachith.one_server.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,32 +35,53 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
+        if (request.getRequestURI().contains("/auth/refresh")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
             String token = authHeader.substring(7);
-            // Extract roles from the token
-            List<String> roles = jwtUtil.extractRoles(token);
 
-            List<GrantedAuthority> authorities = roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList());
+            try {
+                // Extract roles from the token
+                List<String> roles = jwtUtil.extractRoles(token);
+                String username = jwtUtil.extractUsername(token);
 
-            String username = jwtUtil.extractUsername(token);
+                List<GrantedAuthority> authorities = roles.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            authorities
-                    );
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                username,
+                                null,
+                                authorities
+                        );
 
-            authentication.setDetails(
-                    new WebAuthenticationDetailsSource()
-                            .buildDetails(request)
-            );
+//                authentication.setDetails(
+//                        new WebAuthenticationDetailsSource()
+//                                .buildDetails(request)
+//                );
 
-            SecurityContextHolder.getContext()
-                    .setAuthentication(authentication);
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
+            } catch (ExpiredJwtException e) {
+                // ✅ TOKEN EXPIRED → RETURN 401
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Access token expired");
+                return; // ⛔ STOP FILTER CHAIN
+
+            } catch (JwtException e) {
+                // ❌ Invalid token
+                SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid token");
+                return;
+            }
+
         }
 
         filterChain.doFilter(request, response);

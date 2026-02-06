@@ -18,7 +18,7 @@ import java.util.List;
 @Component
 public class JwtUtil {
 
-    private final long EXPIRATION_MS = 3600000;
+    private final long EXPIRATION_MS = 3 * 60 * 1000; // 3 minutes
 
     private Key key; // = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 

@@ -18,13 +18,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userRepository.findByUsername(username).orElseThrow(
-                () -> new UsernameNotFoundException("User not found with username: " + username)
-        );
-        return User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .roles(user.getRole())
-                .build();
+        // ✅ Return the entity directly
+        return userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "User not found with username: " + username
+                        )
+                );
     }
 }
