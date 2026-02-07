@@ -8,7 +8,9 @@ import com.sachith.one_server.repository.RefreshTokenRepository;
 import com.sachith.one_server.repository.UserRepository;
 import com.sachith.one_server.security.JwtUtil;
 import com.sachith.one_server.service.RefreshTokenService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,8 +43,27 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+
+        if(userRepository.existsByUsername(request.username())) {
+            return ResponseEntity.badRequest().body("Username is already taken");
+        }
+
+        AppUser user = new AppUser();
+        user.setUsername(request.username());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.addRole("USER");
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok("User registered successfully");
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<TokenResponse> login(
+            @RequestBody LoginRequest request,
+            HttpServletResponse response) {
 
         // Authenticate the user, the process begins here.
         Authentication auth = authenticationManager.authenticate(
@@ -63,30 +84,49 @@ public class AuthController {
                 auth.getAuthorities()
         );
 
-        return ResponseEntity.ok(new TokenResponse(accessToken,refreshToken.getToken()));
+        // 🔐 Set refresh token as HttpOnly cookie
+        ResponseCookie cookie = ResponseCookie.from(
+                        "refreshToken",
+                        refreshToken.getToken()
+                )
+                .httpOnly(true)
+                .secure(false) // true in production (HTTPS)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return ResponseEntity.ok(new TokenResponse(accessToken));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-
-        if(userRepository.existsByUsername(request.username())) {
-            return ResponseEntity.badRequest().body("Username is already taken");
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(
+            @CookieValue(value = "refreshToken", required = false) String token,
+            HttpServletResponse response
+    ) {
+        if(token == null) {
+            throw new UnauthorizedException("No refresh token found");
         }
 
-        AppUser user = new AppUser();
-        user.setUsername(request.username());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.addRole("USER");
+        refreshTokenService.deleteByToken(token);
 
-        userRepository.save(user);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .build();
 
-        return ResponseEntity.ok("User registered successfully");
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        return ResponseEntity.ok("Logged out");
     }
 
     @PostMapping("/refresh")
-    public TokenResponse refreshToken(@RequestHeader("Authorization") String header) {
-
-        String refreshTokenValue = extract(header);
+    public TokenResponse refreshToken(
+            @CookieValue("refreshToken") String refreshTokenValue) {
 
         RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
         AppUser user = refreshToken.getAppUser();
@@ -97,15 +137,7 @@ public class AuthController {
                         user.getUsername(),
                         user.getAuthorities()
                 );
-        return new TokenResponse(newAccessToken, refreshTokenValue);
+        return new TokenResponse(newAccessToken);
     }
-
-    private String extract(String header) {
-        if (header == null || !header.startsWith("Bearer ")) {
-            throw new UnauthorizedException("Missing refresh token");
-        }
-        return header.substring(7);
-    }
-
 }
 

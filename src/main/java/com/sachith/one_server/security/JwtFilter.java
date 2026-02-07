@@ -35,7 +35,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (request.getRequestURI().contains("/auth/refresh")) {
+        String uri = request.getRequestURI();
+
+        if (uri.contains("/auth/refresh") || uri.contains("/auth/logout")) {
             filterChain.doFilter(request, response);
             return;
         }

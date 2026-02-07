@@ -40,5 +40,11 @@ public class RefreshTokenService {
         }
         return refreshToken;
     }
+
+    // ✅ Delete refresh token on logout
+    @Transactional
+    public void deleteByToken(String token){
+        repository.deleteByToken(token);
+    }
 }
 
