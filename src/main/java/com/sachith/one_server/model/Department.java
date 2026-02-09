@@ -25,4 +25,31 @@ public class Department {
     public void setName(String name) {
         this.name = name;
     }
+
+    // ── Builder Pattern ─────────────────────────────────────────────
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Integer id;
+        private String name;
+
+        public Builder id(Integer id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Department build() {
+            Department d = new Department();
+            d.setId(id);
+            d.setName(name);
+            return d;
+        }
+    }
 }

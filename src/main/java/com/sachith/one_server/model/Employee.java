@@ -17,7 +17,7 @@ public class Employee {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     Department department;
 
     @NotNull
@@ -53,5 +53,46 @@ public class Employee {
 
     public void setSalary(Double salary) {
         this.salary = salary;
+    }
+
+    // ── Builder Pattern ─────────────────────────────────────────────
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Integer id;
+        private String name;
+        private Double salary;
+        private Department department;
+
+        public Builder id(Integer id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder salary(Double salary) {
+            this.salary = salary;
+            return this;
+        }
+
+        public Builder department(Department dept) {
+            this.department = dept;
+            return this;
+        }
+
+        public Employee build() {
+            Employee e = new Employee();
+            e.setId(id);
+            e.setName(name);
+            e.setSalary(salary);
+            e.setDepartment(department);
+            return e;
+        }
     }
 }
