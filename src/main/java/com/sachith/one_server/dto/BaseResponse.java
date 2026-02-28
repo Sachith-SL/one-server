@@ -25,6 +25,10 @@ public class BaseResponse<T> {
         return new BaseResponse<>(false, message, null);
     }
 
+    public static <T> BaseResponse<T> ok(String message) {
+        return new BaseResponse<>(true, message, null);
+    }
+
     public boolean isSuccess() {
         return success;
     }

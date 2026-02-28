@@ -44,10 +44,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<BaseResponse<String>> register(@RequestBody RegisterRequest request) {
 
         if(userRepository.existsByUsername(request.username())) {
-            return ResponseEntity.badRequest().body("Username is already taken");
+            return ResponseEntity.badRequest().body(BaseResponse.error("Username is already taken"));
         }
 
         AppUser user = new AppUser();
@@ -57,7 +57,7 @@ public class AuthController {
 
         userRepository.save(user);
 
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok(BaseResponse.ok("User registered successfully"));
     }
 
     @PostMapping("/login")
@@ -93,7 +93,7 @@ public class AuthController {
                 .secure(false) // true in production (HTTPS)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Strict")
+                        .sameSite("Lax")
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
@@ -117,6 +117,7 @@ public class AuthController {
                 .secure(false)
                 .path("/")
                 .maxAge(0)
+                .sameSite("Lax")
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
@@ -125,7 +126,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public TokenResponse refreshToken(
+    public ResponseEntity<TokenResponse> refreshToken(
             @CookieValue("refreshToken") String refreshTokenValue) {
 
         RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
@@ -137,7 +138,7 @@ public class AuthController {
                         user.getUsername(),
                         user.getAuthorities()
                 );
-        return new TokenResponse(newAccessToken);
+        return ResponseEntity.ok(new TokenResponse(newAccessToken));
     }
 }
 
