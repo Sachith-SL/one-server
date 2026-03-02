@@ -8,8 +8,15 @@ import org.springframework.data.domain.Pageable;
 public interface EmployeeService {
 
     public Page<EmployeeResponse> getAllEmployees(Pageable pageable);
+
+    // Search employees by name (case-insensitive, partial match)
+    public Page<EmployeeResponse> searchEmployeesByName(String name, Pageable pageable);
+
     public EmployeeResponse getEmployeeById(Integer id);
+
     public EmployeeResponse createEmployee(EmployeeRequest request);
+
     public EmployeeResponse updateEmployee(Integer id, EmployeeResponse request);
+
     public void deleteEmployee(Integer id);
 }

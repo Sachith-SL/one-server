@@ -26,10 +26,17 @@ public class EmployeeController {
         this.service = service;
     }
 
-    // get all employees
+    // get all employees or search by name
     @GetMapping
-    public ResponseEntity<BaseResponse<Page<EmployeeResponse>>> getAllEmployees(Pageable pageable) {
-        Page<EmployeeResponse> employeeResponsePage = service.getAllEmployees(pageable);
+    public ResponseEntity<BaseResponse<Page<EmployeeResponse>>> getAllEmployees(
+            @RequestParam(value = "search", required = false) String search,
+            Pageable pageable) {
+        Page<EmployeeResponse> employeeResponsePage;
+        if (search != null && !search.isEmpty()) {
+            employeeResponsePage = service.searchEmployeesByName(search, pageable);
+        } else {
+            employeeResponsePage = service.getAllEmployees(pageable);
+        }
         return ResponseEntity.ok(BaseResponse.success("Fetched employees", employeeResponsePage));
     }
 

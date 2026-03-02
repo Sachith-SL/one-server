@@ -17,6 +17,18 @@ import java.util.List;
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmployeeResponse> searchEmployeesByName(String name, Pageable pageable) {
+        return employeeRepository.findByNameContainingIgnoreCase(name, pageable)
+                .map(emp -> new EmployeeResponse(
+                        emp.getId(),
+                        emp.getName(),
+                        emp.getDepartment() != null ? emp.getDepartment().getId() : null,
+                        emp.getSalary()
+                ));
+    }
+
     public EmployeeRepository employeeRepository;
     public DepartmentRepository departmentRepository;
 
